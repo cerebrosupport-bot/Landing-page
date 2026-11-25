@@ -1,0 +1,170 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "Registro de interés de un visitante para el lanzamiento de Te cuento tu primer paso.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Nombre del visitante interesado."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+          "description": "Correo electrónico del visitante interesado."
+        },
+        "interestArea": {
+          "type": "string",
+          "enum": [
+            "procrastination",
+            "self_esteem",
+            "emotions",
+            "relationships",
+            "habits",
+            "direction",
+            "unsure"
+          ],
+          "description": "Área personal que la persona desea trabajar."
+        },
+        "consent": {
+          "type": "boolean",
+          "description": "Consentimiento explícito para recibir novedades sobre el lanzamiento."
+        },
+        "locale": {
+          "type": "string",
+          "enum": ["es", "en"],
+          "description": "Idioma activo en el momento del registro."
+        },
+        "source": {
+          "type": "string",
+          "enum": ["hero", "topic_card", "direct"],
+          "description": "Origen dentro de la landing desde donde llegó al formulario."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fecha y hora de servidor en la que se registró el interés."
+        }
+      },
+      "required": ["name", "email", "interestArea", "consent", "locale", "source", "createdAt"]
+    },
+    "SiteContent": {
+      "title": "SiteContent",
+      "description": "Configuración editable de textos clave y muestras de audio demostrativas de la landing page.",
+      "type": "object",
+      "properties": {
+        "heroTitle": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 180,
+          "description": "Titular principal de la sección Hero."
+        },
+        "heroSubtitle": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 320,
+          "description": "Texto secundario de la sección Hero."
+        },
+        "launchNote": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Nota breve de disponibilidad o estado de lanzamiento."
+        },
+        "philosophyQuote": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 220,
+          "description": "Mensaje principal de la sección de filosofía."
+        },
+        "audioSamples": {
+          "type": "array",
+          "description": "Lista acotada (máximo 10) de pistas demostrativas de audio."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fecha de servidor de la última actualización."
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "UID del administrador que guardó el contenido."
+        }
+      },
+      "required": ["heroTitle", "heroSubtitle", "launchNote", "philosophyQuote", "audioSamples", "updatedAt", "updatedBy"]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "Evento anónimo de analítica agregada sin PII ni cookies invasivas.",
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "type": "string",
+          "enum": ["page_view", "cta_click", "topic_select", "audio_play", "lead_submit", "share_click"],
+          "description": "Tipo de interacción medida."
+        },
+        "target": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Identificador opcional del elemento interactuado."
+        },
+        "locale": {
+          "type": "string",
+          "enum": ["es", "en"],
+          "description": "Idioma activo del visitante."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Marca temporal de servidor."
+        }
+      },
+      "required": ["eventType", "target", "locale", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Registro de administrador autorizado del panel privado.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/leads/{leadId}": {
+      "schema": { "$ref": "#/entities/Lead" },
+      "description": "Registros permanentes de usuarios interesados (creación pública validada, lectura/borrado solo admin)."
+    },
+    "/siteContent/{docId}": {
+      "schema": { "$ref": "#/entities/SiteContent" },
+      "description": "Configuración editable de contenidos y audios de la landing page (documento landing)."
+    },
+    "/analyticsEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/AnalyticsEvent" },
+      "description": "Eventos agregados y anónimos de visitas, clics y conversiones."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Administradores autorizados adicionales al administrador principal verificado."
+    }
+  }
+}

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Te cuento tu primer paso — Te cuento el porqué</title>
+    <meta
+      name="description"
+      content="Ya sabes qué necesitas cambiar. Ahora te enseñamos cómo empezar. Audios personalizados, actividades prácticas y acompañamiento profesional a tu ritmo."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#F4F6FA" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121726" media="(prefers-color-scheme: dark)" />
+
+    <!-- OpenGraph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content="Te cuento el porqué" />
+    <meta property="og:title" content="Te cuento tu primer paso — Te cuento el porqué" />
+    <meta
+      property="og:description"
+      content="Descubre un camino adaptado a ti para comprender lo que te sucede y comenzar a construir el cambio que necesitas."
+    />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Te cuento tu primer paso — Te cuento el porqué" />
+    <meta
+      name="twitter:description"
+      content="Ya sabes qué necesitas cambiar. Ahora te enseñamos cómo empezar."
+    />
+
+    <!-- Typography: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Prevent theme flash: respects saved preference or system preference -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('tctpp_theme');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (saved === 'dark' || ((!saved || saved === 'system') && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Te cuento tu primer paso",
+        "alternateName": "Te cuento el porqué",
+        "inLanguage": "es",
+        "description": "Plataforma de desarrollo personal con audios personalizados, actividades prácticas y acompañamiento profesional de psicología."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Qué es Te cuento tu primer paso?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Es una plataforma de desarrollo personal perteneciente a Te cuento el porqué que combina audios personalizados, actividades prácticas y acompañamiento opcional con profesionales de la psicología."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Esto sustituye una terapia psicológica?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Los contenidos de desarrollo personal de la plataforma no sustituyen la atención psicológica ni médica profesional cuando esta sea necesaria."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Puedo avanzar a mi propio ritmo?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sí. Cada programa está pensado para adaptarse a tu ritmo cotidiano, sin presiones ni plazos rígidos."
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body class="bg-[#F4F6FA] text-[#1A2035] dark:bg-[#121726] dark:text-[#F4F6FA] antialiased selection:bg-[#2270E2]/20 selection:text-[#2270E2]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

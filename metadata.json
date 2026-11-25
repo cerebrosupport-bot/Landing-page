@@ -1,0 +1,6 @@
+{
+  "name": "Te cuento tu primer paso",
+  "description": "Plataforma de desarrollo personal de Te cuento el porqué: audios personalizados, actividades prácticas y acompañamiento profesional para empezar el cambio que necesitas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

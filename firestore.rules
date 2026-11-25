@@ -1,0 +1,187 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable hardened primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isPrimaryAdmin() {
+      return isVerified()
+        && request.auth.token.email is string
+        && request.auth.token.email == 'cerebrosupport@gmail.com';
+    }
+
+    function isAdmin() {
+      return isPrimaryAdmin()
+        || (isVerified() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    function isValidInterestArea(val) {
+      return val is string && val in [
+        'procrastination',
+        'self_esteem',
+        'emotions',
+        'relationships',
+        'habits',
+        'direction',
+        'unsure'
+      ];
+    }
+
+    function isValidLocale(val) {
+      return val is string && val in ['es', 'en'];
+    }
+
+    function isValidLead(data) {
+      return data.keys().hasAll(['name', 'email', 'interestArea', 'consent', 'locale', 'source', 'createdAt'])
+        && data.keys().hasOnly(['name', 'email', 'interestArea', 'consent', 'locale', 'source', 'createdAt'])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && isValidInterestArea(data.interestArea)
+        && data.consent is bool && data.consent == true
+        && isValidLocale(data.locale)
+        && data.source is string && data.source in ['hero', 'topic_card', 'direct']
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAudioItem(item) {
+      return item is map
+        && item.keys().hasAll(['id', 'title', 'description', 'character', 'durationLabel', 'audioUrl', 'active'])
+        && item.keys().hasOnly(['id', 'title', 'description', 'character', 'durationLabel', 'audioUrl', 'active'])
+        && item.id is string && item.id.size() >= 1 && item.id.size() <= 64
+        && item.title is string && item.title.size() >= 2 && item.title.size() <= 120
+        && item.description is string && item.description.size() <= 260
+        && item.character is string && item.character in ['nico', 'bruno', 'tito', 'mateo', 'aurelio']
+        && item.durationLabel is string && item.durationLabel.size() >= 1 && item.durationLabel.size() <= 16
+        && item.audioUrl is string && item.audioUrl.size() >= 1 && item.audioUrl.size() <= 500
+        && item.active is bool;
+    }
+
+    function isValidSiteContent(data) {
+      return data.keys().hasAll(['heroTitle', 'heroSubtitle', 'launchNote', 'philosophyQuote', 'audioSamples', 'updatedAt', 'updatedBy'])
+        && data.keys().hasOnly(['heroTitle', 'heroSubtitle', 'launchNote', 'philosophyQuote', 'audioSamples', 'updatedAt', 'updatedBy'])
+        && data.heroTitle is string && data.heroTitle.size() >= 10 && data.heroTitle.size() <= 180
+        && data.heroSubtitle is string && data.heroSubtitle.size() >= 10 && data.heroSubtitle.size() <= 320
+        && data.launchNote is string && data.launchNote.size() <= 160
+        && data.philosophyQuote is string && data.philosophyQuote.size() >= 10 && data.philosophyQuote.size() <= 220
+        && data.audioSamples is list && data.audioSamples.size() <= 10
+        && (data.audioSamples.size() == 0 || isValidAudioItem(data.audioSamples[0]))
+        && data.updatedAt is timestamp
+        && data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128
+        && data.updatedBy == request.auth.uid;
+    }
+
+    function isValidAnalyticsEvent(data) {
+      return data.keys().hasAll(['eventType', 'target', 'locale', 'createdAt'])
+        && data.keys().hasOnly(['eventType', 'target', 'locale', 'createdAt'])
+        && data.eventType is string
+        && data.eventType in ['page_view', 'cta_click', 'topic_select', 'audio_play', 'lead_submit', 'share_click']
+        && data.target is string && data.target.size() <= 64
+        && isValidLocale(data.locale)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAdminDoc(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['email', 'role', 'createdAt'])
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && data.role is string && data.role == 'admin'
+        && data.createdAt is timestamp;
+    }
+
+    // Connection health check document (read-only, no PII)
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    // Waitlist leads: public validated create only, strictly admin-only read/delete
+    match /leads/{leadId} {
+      allow create: if isValidId(leadId)
+        && isValidLead(incoming())
+        && incoming().createdAt == request.time;
+      allow get: if isValidId(leadId) && isAdmin();
+      allow list: if isPrimaryAdmin();
+      allow update: if false;
+      allow delete: if isValidId(leadId) && isAdmin();
+    }
+
+    // Landing page editable content & demo audio config
+    match /siteContent/{docId} {
+      allow get: if isValidId(docId) && docId == 'landing';
+      allow list: if false;
+      allow create: if isValidId(docId)
+        && docId == 'landing'
+        && isAdmin()
+        && isValidSiteContent(incoming())
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(docId)
+        && docId == 'landing'
+        && isAdmin()
+        && isValidSiteContent(incoming())
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'heroTitle',
+          'heroSubtitle',
+          'launchNote',
+          'philosophyQuote',
+          'audioSamples',
+          'updatedAt',
+          'updatedBy'
+        ]);
+      allow delete: if false;
+    }
+
+    // Privacy-friendly aggregate analytics events (no PII)
+    match /analyticsEvents/{eventId} {
+      allow create: if isValidId(eventId)
+        && isValidAnalyticsEvent(incoming())
+        && incoming().createdAt == request.time;
+      allow get: if isValidId(eventId) && isAdmin();
+      allow list: if isPrimaryAdmin();
+      allow update: if false;
+      allow delete: if isValidId(eventId) && isAdmin();
+    }
+
+    // Authorized admin registry
+    match /admins/{uid} {
+      allow get: if isSignedIn() && isValidId(uid) && (request.auth.uid == uid || isPrimaryAdmin());
+      allow list: if isPrimaryAdmin();
+      allow create: if isPrimaryAdmin()
+        && isValidId(uid)
+        && isValidAdminDoc(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if isPrimaryAdmin()
+        && isValidId(uid)
+        && isValidAdminDoc(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'role']);
+      allow delete: if isPrimaryAdmin() && isValidId(uid);
+    }
+  }
+}
